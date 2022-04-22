@@ -22,9 +22,9 @@ import PackageDescription
 
 #if os(Linux)
 let package = Package(
-	name: "PerfectHTTP",
+	name: "ChPerfectHTTP",
 	products: [
-		.library(name: "PerfectHTTP", targets: ["PerfectHTTP"])
+		.library(name: "ChPerfectHTTP", targets: ["ChPerfectHTTP"])
 	],
 	dependencies: [
 		.package(url: "https://github.com/PerfectlySoft/PerfectLib.git", from: "3.0.0"),
@@ -32,22 +32,22 @@ let package = Package(
 		.package(url: "https://github.com/PerfectlySoft/Perfect-LinuxBridge.git", from: "3.0.0")
 	],
  	targets: [
-		.target(name: "PerfectHTTP", dependencies: ["PerfectLib", "PerfectNet", "LinuxBridge"]),
-		.testTarget(name: "PerfectHTTPTests", dependencies: ["PerfectHTTP", "PerfectNet"])
+		.target(name: "ChPerfectHTTP", dependencies: ["PerfectLib", "PerfectNet", "LinuxBridge"]),
+		.testTarget(name: "PerfectHTTPTests", dependencies: ["ChPerfectHTTP", "PerfectNet"])
   ]
 )
 #else
 let package = Package(
-	name: "PerfectHTTP",
+	name: "ChPerfectHTTP",
 	products: [
-		.library(name: "PerfectHTTP", targets: ["PerfectHTTP"])
+		.library(name: "ChPerfectHTTP", targets: ["ChPerfectHTTP"])
 	],
 	dependencies: [
 		.package(url: "https://github.com/PerfectlySoft/PerfectLib.git", from: "3.0.0"),
 		.package(url: "https://github.com/PerfectlySoft/Perfect-Net.git", from: "3.0.0")
 	], targets: [
-		.target(name: "PerfectHTTP", dependencies: ["PerfectLib", "PerfectNet"]),
-		.testTarget(name: "PerfectHTTPTests", dependencies: ["PerfectHTTP", "PerfectNet"])
+		.target(name: "ChPerfectHTTP", dependencies: ["PerfectLib", "PerfectNet"]),
+		.testTarget(name: "PerfectHTTPTests", dependencies: ["ChPerfectHTTP", "PerfectNet"])
   ]
 )
 #endif
