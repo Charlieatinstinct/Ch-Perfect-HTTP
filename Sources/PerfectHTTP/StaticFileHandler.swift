@@ -232,7 +232,44 @@ public struct StaticFileHandler {
 		let eTag = self.getETag(file: file)
 		response.addHeader(.eTag, value: eTag)
 	}
-	
+	#if os(iOS) || os (Linux)
+    struct sf_hdtr { }
+		//   public func sendfile(_: Int32, _: Int32, _: off_t, _: UnsafeMutablePointer<off_t>!, _: UnsafeMutablePointer<sf_hdtr>!, _: Int32) -> Int32
+
+    private func sendfileImpl(source: Int32, _ target : Int32, _: off_t, _: UnsafeMutablePointer<off_t>!, _: UnsafeMutablePointer<sf_hdtr>!, _: Int32) -> Int32 {
+        var buffer = [UInt8](repeating: 0, count: 1024)
+
+        while true {
+            let readResult = read(source, &buffer, buffer.count)
+            guard readResult > 0 else {
+                return Int32(readResult)
+            }
+            var writeCounter = 0
+            while writeCounter < readResult {//&buffer + writeCounter
+
+				var arrayPtr = UnsafeMutableBufferPointer<UInt8>(start: &buffer, count: buffer.count)     // baseAddress 是第一个元素的指针，类型为 UnsafeMutablePointer<Int> 
+				
+				// var count = writeCounter
+                var writePtr = arrayPtr.baseAddress!.advanced(by: writeCounter)
+				// while(count>0){
+				// 	writePtr = writePtr!.successor()
+				// 	count -= 1;
+				// }
+                // var writePtr =  writePtr!.advanced(by: writeCounter)
+
+                let writeResult = write(target, writePtr, readResult - writeCounter)
+                guard writeResult > 0 else {
+                    return Int32(writeResult)
+                }
+                writeCounter = writeCounter + writeResult
+            }
+        }
+    }
+#else
+    private let sendfileImpl = sendfile
+
+#endif
+
 	func sendFile(remainingBytes remaining: Int, response: HTTPResponse, file: File, completion: @escaping (Bool) -> ()) {
 		if self.shouldSkipSendfile(response: response) {
 			let thisRead = min(chunkedBufferSize, remaining)
@@ -257,7 +294,7 @@ public struct StaticFileHandler {
 			let inFd = file.fd
 			#if os(Linux)
 			let toSend = off_t(remaining)
-			let result = sendfile(outFd, Int32(inFd), nil, toSend)
+			let result = sendfileImpl(outFd, Int32(inFd), nil, toSend)
 			if result >= 0 {
 				let newRemaining = remaining - result
 				if newRemaining == 0 {
@@ -279,7 +316,7 @@ public struct StaticFileHandler {
 			#else
 			let offset = off_t(file.marker)
 			var toSend = off_t(remaining)
-			let result = sendfile(Int32(inFd), outFd, offset, &toSend, nil, 0)
+			let result = sendfileImpl(source: Int32(inFd), outFd, offset, &toSend, nil, 0)
 			if result == 0 {
 				completion(true)
 			} else	if result == -1 && errno == EAGAIN {
